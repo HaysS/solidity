@@ -44,6 +44,8 @@ add_library(yul
 	backends/wasm/EWasmObjectCompiler.h
 	backends/wasm/EWasmCodeTransform.cpp
 	backends/wasm/EWasmCodeTransform.h
+	backends/wasm/EWasmToText.cpp
+	backends/wasm/EWasmToText.h
 	optimiser/ASTCopier.cpp
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp
