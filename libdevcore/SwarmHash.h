@@ -28,5 +28,11 @@ namespace dev
 
 /// Compute the "swarm hash" of @a _input
 h256 swarmHash(std::string const& _input);
+/// Compute the "ipfs hash" of a file with the content @a _data.
+/// The output will be the multihash of the UnixFS protobuf encoded data.
+/// As hash function it will use sha2-256.
+/// The effect is that the hash should be identical to the one produced by
+/// the command `ipfs add <filename>`.
+bytes ipfsHash(std::string const& _data);
 
 }

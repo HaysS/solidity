@@ -20,6 +20,7 @@
 #include <libdevcore/SwarmHash.h>
 
 #include <libdevcore/Keccak256.h>
+#include <libdevcore/picosha2.h>
 
 using namespace std;
 using namespace dev;
@@ -66,4 +67,61 @@ h256 swarmHashIntermediate(string const& _input, size_t _offset, size_t _length)
 h256 dev::swarmHash(string const& _input)
 {
 	return swarmHashIntermediate(_input, 0, _input.size());
+}
+
+namespace
+{
+bytes varintEncoding(size_t _n)
+{
+	uint8_t leastSignificant = _n & 0x7f;
+	size_t moreSignificant = _n >> 7;
+	if (moreSignificant)
+		return bytes{uint8_t(uint8_t(0x80) | leastSignificant)} + varintEncoding(moreSignificant);
+	else
+		return bytes{leastSignificant};
+}
+
+string base58Encode(bytes const& _data)
+{
+	static string const alphabet{"123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"};
+	bigint data(toHex(_data, HexPrefix::Add));
+	string output;
+	while (data)
+	{
+		output += alphabet[size_t(data % alphabet.size())];
+		data /= alphabet.size();
+	}
+	reverse(output.begin(), output.end());
+	return output;
+}
+}
+
+bytes dev::ipfsHash(string const& _data)
+{
+	bytes lengthAsVarint = varintEncoding(_data.size());
+
+	bytes protobufEncodedData;
+	// Type: File
+	protobufEncodedData += bytes{0x08, 0x02};
+	if (!_data.empty())
+	{
+		// Data (length delimited bytes)
+		protobufEncodedData += bytes{0x12};
+		protobufEncodedData += lengthAsVarint;
+		protobufEncodedData += asBytes(_data);
+	}
+	// filesize: length as varint
+	protobufEncodedData += bytes{0x18} + lengthAsVarint;
+
+	// TODO check what this actually refers to
+	// TODO Handle "large" files with multiple blocks
+	bytes blockData = bytes{0x0a} + varintEncoding(protobufEncodedData.size()) + protobufEncodedData;
+
+	cout << toHex(protobufEncodedData) << endl;
+	cout << toHex(blockData) << endl;
+	// Multihash: sha2-256, 256 bits
+	// TODO Do not go to hex and back
+	bytes hash = bytes{0x12, 0x20} + fromHex(picosha2::hash256_hex_string(blockData));
+	cout << "ipfs://" << base58Encode(hash) << endl;
+	return hash;
 }

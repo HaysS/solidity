@@ -51,6 +51,12 @@ BOOST_AUTO_TEST_CASE(test_zeros)
 	BOOST_CHECK_EQUAL(swarmHashHex(string(2095104, 0)), string("a9958184589fc11b4027a4c233e777ebe2e99c66f96b74aef2a0638a94dd5439"));
 }
 
+BOOST_AUTO_TEST_CASE(ipfshash)
+{
+	cout << toHex(ipfsHash(string{})) << endl;
+	ipfsHash(string{"x"});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
