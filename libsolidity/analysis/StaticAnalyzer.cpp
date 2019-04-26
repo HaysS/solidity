@@ -309,6 +309,16 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 							"Arithmetic modulo zero."
 						);
 		}
+
+		if (m_currentContract->isLibrary())
+			if (functionType->kind() == FunctionType::Kind::DelegateCall)
+				for (auto const& contractFunction: m_currentContract->definedFunctions())
+					if (functionType->declaration().id() == contractFunction->id())
+						m_errorReporter.typeError(
+							_functionCall.location(),
+							SecondarySourceLocation().append("The function declaration is here:", contractFunction->location()),
+							"Libraries cannot call their own functions externally."
+						);
 	}
 	return true;
 }
